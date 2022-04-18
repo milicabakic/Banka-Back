@@ -21,18 +21,18 @@ public abstract class HartijaOdVrednosti {
     private Long id;
 
     private String oznakaHartije;
-    private String opis_hartije;
+    private String opisHartije;
 
     @ManyToOne
     private Berza berza;
 
-    private Date last_updated;
+    private Date lastUpdated;
     private Double cena;
     private Double ask;
     private Double bid;
-    private Double promena_iznos;
+    private Double promenaIznos;
     private Long volume;
 
     @ElementCollection
-    private List<String> istorijski_podaci;
+    private List<String> istorijskiPodaci;
 }

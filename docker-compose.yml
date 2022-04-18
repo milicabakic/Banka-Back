@@ -35,8 +35,8 @@ services:
   email-servis:
     build: ./mail-service
     environment:
-      spring.mail.username: "email"
-      spring.mail.password: "password"
+      spring.mail.username: "banka.softverskoinzenjerstvo@gmail.com"
+      spring.mail.password: "banka1234"
     ports:
       - "8081:8081"
     links:

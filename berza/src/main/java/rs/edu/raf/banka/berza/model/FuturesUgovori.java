@@ -12,10 +12,10 @@ import lombok.Data;
 @NoArgsConstructor
 public class FuturesUgovori extends HartijaOdVrednosti{
 
-    private Double contract_size;
-    private String contract_unit;
-    private Double maintenance_margin;
-    private Date settlement_date;
+    private Double contractSize;
+    private String contractUnit;
+    private Double maintenanceMargin;
+    private Date settlementDate;
 
     //TODO: Dodati izvedene informacije koje su opisane u specifikaciji.
 }

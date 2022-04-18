@@ -12,10 +12,10 @@ import javax.persistence.*;
 @NoArgsConstructor
 public class Akcije extends HartijaOdVrednosti{
 
-    private Long outstanding_shares;
+    private Long outstandingShares;
 
     public double getPromenaProcenat() {
-        return (100 * (super.getPromena_iznos()) / (super.getCena() - super.getPromena_iznos()) );
+        return (100 * (super.getPromenaIznos()) / (super.getCena() - super.getPromenaIznos()) );
     }
 
     public double getDollarVolume () {
@@ -23,7 +23,7 @@ public class Akcije extends HartijaOdVrednosti{
     }
 
     public double getMarketCap() {
-        return outstanding_shares * super.getCena();
+        return outstandingShares * super.getCena();
     }
 
 }

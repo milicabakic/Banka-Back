@@ -13,15 +13,15 @@ import javax.persistence.*;
 public class Forex extends HartijaOdVrednosti{
 
     @ManyToOne
-    private Valuta base_currency;
+    private Valuta baseCurrency;
 
     @ManyToOne
-    private Valuta quote_currency;
+    private Valuta quoteCurrency;
 
-    private Long contract_size;
-    private Double lot_size;
+    private Long contractSize;
+    private Double lotSize;
 
     public double getNominalnaVrednost () {
-        return lot_size * super.getCena();
+        return lotSize * super.getCena();
     }
 }

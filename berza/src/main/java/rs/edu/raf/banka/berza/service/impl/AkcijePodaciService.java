@@ -16,6 +16,7 @@ import rs.edu.raf.banka.berza.dto.AkcijeTimeseriesDto;
 import rs.edu.raf.banka.berza.dto.request.AkcijeTimeseriesReadRequest;
 import rs.edu.raf.banka.berza.dto.request.AkcijeTimeseriesUpdateRequest;
 import rs.edu.raf.banka.berza.model.Akcije;
+import rs.edu.raf.banka.berza.model.Berza;
 import rs.edu.raf.banka.berza.repository.AkcijeRepository;
 
 import java.time.DayOfWeek;
@@ -37,14 +38,16 @@ public class AkcijePodaciService {
     private final Config alphavantageApiClient;
 
     private AkcijeRepository akcijeRepository;
+    private BerzaService berzaService;
 
     private final List<String> odabraneAkcije = Arrays.asList("AAPL", "MSFT", "GOOG", "BA", "AXP");
 
     @Autowired
-    public AkcijePodaciService(AkcijeRepository akcijeRepository,
+    public AkcijePodaciService(AkcijeRepository akcijeRepository, BerzaService berzaService,
                                WebClient influxApiClient,
                                Config alphavantageApiClient){
         this.akcijeRepository = akcijeRepository;
+        this.berzaService = berzaService;
         this.influxApiClient = influxApiClient;
         this.alphavantageApiClient = alphavantageApiClient;
     }
@@ -72,19 +75,22 @@ public class AkcijePodaciService {
                     .fetchSync();
             if(cor != null && cor.getErrorMessage() == null) {
                 CompanyOverview co = cor.getOverview();
+                //uvezati sa Berzom
+                Berza berza = berzaService.findBerza(co.getExchange());
+                akcija.setBerza(berza);
                 akcija.setOznakaHartije(co.getSymbol());
                 akcija.setOznakaHartije("");
-                akcija.setOpis_hartije(co.getName());
-                akcija.setLast_updated(new Date());
-                akcija.setOutstanding_shares(co.getSharesOutstanding());
+                akcija.setOpisHartije(co.getName());
+                akcija.setLastUpdated(new Date());
+                akcija.setOutstandingShares(co.getSharesOutstanding());
             } else {
                 // Nećemo da pucamo u slučaju da se desila API greška.
                 // API je rate limitovan, pa bi to dosta kočilo.
                 // U produkciji svakako treba izbaciti grešku.
                 akcija.setOznakaHartije(ticker);
-                akcija.setOpis_hartije(ticker);
-                akcija.setLast_updated(new Date());
-                akcija.setOutstanding_shares(0L);
+                akcija.setOpisHartije(ticker);
+                akcija.setLastUpdated(new Date());
+                akcija.setOutstandingShares(0L);
             }
             akcijeRepository.save(akcija);
         }
@@ -108,8 +114,8 @@ public class AkcijePodaciService {
 
         AkcijePodaciDto dto = dtoList.get(0);
         dto.setTicker(ticker);
-        dto.setOpisHartije(akcija.getOpis_hartije());
-        dto.setOutstandingShares(akcija.getOutstanding_shares());
+        dto.setOpisHartije(akcija.getOpisHartije());
+        dto.setOutstandingShares(akcija.getOutstandingShares());
 
         return dto;
     }
@@ -198,11 +204,11 @@ public class AkcijePodaciService {
     public Page<Akcije> search(String oznakaHartije, String opisHartije, Integer page, Integer size){
         Akcije akcije = new Akcije();
         akcije.setOznakaHartije(oznakaHartije);
-        akcije.setOpis_hartije(opisHartije);
+        akcije.setOpisHartije(opisHartije);
 
         ExampleMatcher exampleMatcher = ExampleMatcher.matching()
-                .withMatcher("oznaka_hartije", ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase())
-                .withMatcher("opis_hartije", ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase());
+                .withMatcher("oznakaHartije", ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase())
+                .withMatcher("opisHartije", ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase());
         Example<Akcije> example = Example.of(akcije, exampleMatcher);
 
         return akcijeRepository.findAll(example, PageRequest.of(page, size));
@@ -216,5 +222,10 @@ public class AkcijePodaciService {
 
     public Akcije getByID(Long id){
         return akcijeRepository.findAkcijeById(id);
+    }
+
+    public Berza findBerzaForAkcije(Long id){
+        Akcije akcije = akcijeRepository.findAkcijeById(id);
+        return akcije.getBerza();
     }
 }

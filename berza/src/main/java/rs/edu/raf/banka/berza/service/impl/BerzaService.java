@@ -26,18 +26,20 @@ public class BerzaService {
     private ForexRepository forexRepository;
     private FuturesUgovoriRepository futuresUgovoriRepository;
     private OrderService orderService;
+    private AkcijePodaciService akcijePodaciService;
     private TransakcijaService transakcijaService;
 
     @Autowired
     public BerzaService(BerzaRepository berzaRepository, UserAccountRepository userAccountRepository,
                         AkcijeRepository akcijeRepository, ForexRepository forexRepository, FuturesUgovoriRepository futuresUgovoriRepository,
-                        TransakcijaService transakcijaService, OrderService orderService){
+                        TransakcijaService transakcijaService, AkcijePodaciService akcijePodaciService, OrderService orderService){
         this.berzaRepository = berzaRepository;
         this.userAccountRepository = userAccountRepository;
         this.akcijeRepository = akcijeRepository;
         this.forexRepository = forexRepository;
         this.futuresUgovoriRepository = futuresUgovoriRepository;
         this.transakcijaService = transakcijaService;
+        this.akcijePodaciService = akcijePodaciService;
         this.orderService = orderService;
     }
 
@@ -48,9 +50,12 @@ public class BerzaService {
         berzaRepository.save(berza);
     }
 
-    public MakeOrderResponse makeOrder(Long berzaId, Long userId, Long hartijaId, String hartijaTipString, Integer kolicina, String action,
-                                       Integer limitValue, Integer stopValue, boolean isAON, boolean isMargin){
+    public Berza findBerza(String oznakaBerze){
+        return berzaRepository.findBerzaByOznakaBerze(oznakaBerze);
+    }
 
+    public MakeOrderResponse makeOrder(Long userId, String symbol, String hartijaTipString, Integer kolicina, String action,
+                                       Integer limitValue, Integer stopValue, boolean isAON, boolean isMargin){
         UserAccount userAccount = userAccountRepository.getById(userId);
         HartijaOdVrednostiType hartijaTip = HartijaOdVrednostiType.valueOf(hartijaTipString.toUpperCase());
         OrderAction orderAkcija = OrderAction.valueOf(action.toUpperCase());
@@ -65,20 +70,29 @@ public class BerzaService {
 
         Double ask = 0.0;
         Double bid = 0.0;
+        Long hartijaId = -1L;
         if(hartijaTip.equals(HartijaOdVrednostiType.AKCIJA)){
-            Akcije akcije = akcijeRepository.getById(hartijaId);
+            Akcije akcije = akcijeRepository.findAkcijeByOznakaHartije(symbol);
+            hartijaId = akcije.getId();
             ask = akcije.getAsk();
             bid = akcije.getBid();
         }
         else if(hartijaTip.equals(HartijaOdVrednostiType.FUTURES_UGOVOR)){
-            FuturesUgovori futuresUgovori = futuresUgovoriRepository.getById(hartijaId);
+            FuturesUgovori futuresUgovori = futuresUgovoriRepository.findFuturesUgovoriByOznakaHartije(symbol);
+            hartijaId = futuresUgovori.getId();
             ask = futuresUgovori.getAsk();
             bid = futuresUgovori.getBid();
         }
         else if(hartijaTip.equals(HartijaOdVrednostiType.FOREX)){
-            Forex forex = forexRepository.getById(hartijaId);
+            Forex forex = forexRepository.findForexByOznakaHartije(symbol);
+            hartijaId = forex.getId();
             ask = forex.getAsk();
             bid = forex.getBid();
+        }
+
+        Long berzaId = -1L;
+        if(hartijaTip.equals(HartijaOdVrednostiType.AKCIJA)){
+            berzaId = akcijePodaciService.findBerzaForAkcije(hartijaId).getId();
         }
 
         Double ukupnaCena = getPrice(ask, bid, orderAkcija);
@@ -99,8 +113,11 @@ public class BerzaService {
     }
 
     private MakeOrderResponse executeTransaction(Long berzaId, Order order, Double ask, Double bid){
-        OrderStatusResponse orderStatus = this.getOrderStatus(berzaId);
-        boolean flag = orderStatus.isBerzaOtvorena();
+        boolean flag = true;
+        if(berzaId != -1) {
+            OrderStatusResponse orderStatus = this.getOrderStatus(berzaId);
+            flag = orderStatus.isBerzaOtvorena();
+        }
         if(order.isAON()){
             Transakcija transakcija;
             if(flag)
@@ -252,10 +269,10 @@ public class BerzaService {
         Date date = new Date();
 
         //format 9:30 a.m. to 4:00 p.m.
-        String pre_market = berza.getPre_market_radno_vreme();
+        String pre_market = berza.getPreMarketRadnoVreme();
         pre_market = pre_market.replace("a.m.", "AM");
         pre_market = pre_market.replace("p.m.", "PM");
-        String post_market = berza.getPost_market_radno_vreme();
+        String post_market = berza.getPostMarketRadnoVreme();
         post_market = post_market.replace("a.m.", "AM");
         post_market = post_market.replace("p.m.", "PM");
 

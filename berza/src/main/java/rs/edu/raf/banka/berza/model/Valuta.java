@@ -17,11 +17,11 @@ public class Valuta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String KodValute;
-    private String NazivValute;
-    private String OznakaValute;
-    private String Drzava;
+    private String kodValute;
+    private String nazivValute;
+    private String oznakaValute;
+    private String drzava;
 
     @OneToMany
-    private List<IstorijaInflacije> IstorijaInflacije;
+    private List<IstorijaInflacije> istorijaInflacije;
 }

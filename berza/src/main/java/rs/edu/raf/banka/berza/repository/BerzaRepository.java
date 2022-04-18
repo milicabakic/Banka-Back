@@ -6,4 +6,6 @@ import rs.edu.raf.banka.berza.model.Berza;
 public interface BerzaRepository extends JpaRepository<Berza, Long> {
 
     Berza findBerzaById(Long id);
+
+    Berza findBerzaByOznakaBerze(String oznakaBerze);
 }

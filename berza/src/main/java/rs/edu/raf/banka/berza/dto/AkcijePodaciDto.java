@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AkcijePodaciDto {
+
     String ticker;
     String opisHartije;
     String time;
