@@ -32,7 +32,7 @@ public class BankaApplication {
 		//dummy check
 		if (!userService.getUserById(1).isPresent()) {
 			return args -> {
-				//Punimo Role permisijama
+				//Pravim permisije za role
 				Collection<String> admin_permissions = new ArrayList<>();
 				admin_permissions.add(String.valueOf(Permissions.CREATE_USER));
 				admin_permissions.add(String.valueOf(Permissions.DELETE_USER));
@@ -43,19 +43,19 @@ public class BankaApplication {
 				Collection<String> neka_pozicija_permissions = new ArrayList<>();
 				neka_pozicija_permissions.add(String.valueOf(Permissions.MANAGE_STUFF));
 
-				//Punimo bazu Rolama
-				userService.saveRole(new Role(null, "ROLE_GL_ADMIN", admin_permissions));
-				userService.saveRole(new Role(null, "ROLE_ADMIN", admin_permissions));
+				//Pravimo Role
+				Role glAdminRole = new Role(null, "ROLE_GL_ADMIN", admin_permissions);
+				Role adminRole = new Role(null, "ROLE_ADMIN", admin_permissions);
+
+				//Stavljamo Role u bazu
+				userService.saveRole(glAdminRole);
+				userService.saveRole(adminRole);
 
 				//Cuvamo glavnog admina
-				userService.createUserAdmin(new User("admin", "Admin123"));
+				userService.createUserAdmin(new User("admin", "Petar", "Petrovic", "email@email.com", "1111111111111", "060123456","Admin123", null, true, false, glAdminRole));
 
+				//testni user za otp, obrisace se..?
 				userService.createUserAdmin(new User("test", "1234", "5MYDN5OMDRTEVQPCED4F5VYKZRPZ4FRY"));
-
-				//Setujemo Rolu adminu
-				userService.setRoleToUser("admin", "ROLE_GL_ADMIN");
-				//userService.setRoleToUser("arnold", "ROLE_ADMIN");
-
 				userService.setRoleToUser("test", "ROLE_ADMIN");
 			};
 		}

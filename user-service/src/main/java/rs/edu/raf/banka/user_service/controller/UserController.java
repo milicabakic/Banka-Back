@@ -75,23 +75,31 @@ public class UserController {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "OK", response = User.class)})
     public ResponseEntity<?>deleteUser(@PathVariable long id) {
         Optional<User> user = userService.getUserById(id);
-        if(user.get() == null){ResponseEntity.badRequest().build();}
-        userService.deleteUser(user.get());
-        return ResponseEntity.ok().body(user.get().getUsername() + " disabled");
+        if(user.isPresent()){
+            if(!userService.deleteUser(user.get())){
+                return ResponseEntity.badRequest().body("Can't delete admin");
+            }
+            return ResponseEntity.ok().body(user.get().getUsername() + " disabled");
+        }else {return ResponseEntity.badRequest().build();}
     }
 
     @PostMapping("/user/edit/{id}")
     @ApiOperation("Edit user with specific id,text fields are with existing data, the user can change them")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "OK", response = User.class)})
     public ResponseEntity<?>editUser(@PathVariable long id, @RequestHeader("Authorization") String token, @RequestBody CreateUserForm createUserForm) {
-        var user = userService.getUserById(id).get();
-        if(!userService.hasEditPermissions(user, token))
-            return ResponseEntity.badRequest().build();
-        //if(user.isRequiresOtp())
-        //    return ResponseEntity.badRequest().build();
+        Optional<User> user = userService.getUserById(id);
+        if(user.isPresent()){
+            //Sonnar pass
+            if (!userService.hasEditPermissions(user.get(), token))
+                return ResponseEntity.badRequest().build();
+            //if(user.isRequiresOtp())
+            //    return ResponseEntity.badRequest().build();
 
-        userService.editUser(user, createUserForm);
-        return ResponseEntity.ok().body(user.getUsername() + " edited");
+            userService.editUser(user.get(), createUserForm);
+            return ResponseEntity.ok().body(user.get().getUsername() + " edited");
+        }else{
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/otp/generateSecret")
@@ -174,8 +182,6 @@ public class UserController {
         return ResponseEntity.ok().body(requires);
     }
 
-
-
     @PostMapping("/user/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordForm resetPasswordForm){
         if(!userService.resetPassword(resetPasswordForm.getEmail())){
@@ -190,6 +196,17 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid token!");
         }
         return ResponseEntity.ok().body("New password!");
+    }
+
+    @PostMapping("/user/new-password/{id}")
+    public ResponseEntity<?> changePasswordInternal(@PathVariable long id, @RequestBody ChangePasswordForm changePasswordForm){
+        Optional<User> user = userService.getUserById(id);
+        if(user.isPresent()){
+            if(!userService.changePassword(changePasswordForm.getNewPassword(), user.get())){
+                return ResponseEntity.badRequest().body("Check your pass again");
+            }
+            return ResponseEntity.ok().body("Password changed for user " + user.get().getUsername());
+        }else {return ResponseEntity.badRequest().body("Invalid id");}
     }
 
     @PostMapping("/user/getId/{token}")

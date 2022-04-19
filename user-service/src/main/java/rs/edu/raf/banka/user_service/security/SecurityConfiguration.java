@@ -47,7 +47,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         authenticationFilter.setFilterProcessesUrl("/api/login");
 
         http.authorizeRequests()
-                .antMatchers("/api/login", "/h2-console").permitAll()
+                .antMatchers("/api/login").permitAll()
                 .antMatchers(GET, "/api/users").hasAuthority(String.valueOf(Permissions.LIST_USERS))
                 .antMatchers(POST, "/api/user/create").hasAuthority(String.valueOf(Permissions.CREATE_USER))
                 .antMatchers(POST, "/api/user/edit/**").hasAnyAuthority(String.valueOf(Permissions.EDIT_USER), String.valueOf(Permissions.MY_EDIT))
